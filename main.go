@@ -28,7 +28,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "ProxyConnect %s -> %s\n", proxyHost, destHost)
 
 	url := url.URL{
-		Scheme: "http",
+		Scheme: u.Scheme,
 		Host:   proxyHost,
 		Opaque: destHost,
 	}
