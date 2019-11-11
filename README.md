@@ -5,7 +5,7 @@ Tool for tunneling SSH through HTTP proxies by Go
 # Usage
 
 ```
-$ http_proxy=http://username:password@proxyhost:proxyport ssh -oProxyCommand='proxyconnect.py %h %p' targethost
+$ http_proxy=http://username:password@proxyhost:proxyport ssh -oProxyCommand='proxyconnect-go %h %p' targethost
 ```
 
 # Additional Infomation
