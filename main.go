@@ -27,7 +27,7 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "ProxyConnect %s -> %s\n", proxyHost, destHost)
 
-	url := url.URL{
+	ur := url.URL{
 		Scheme: u.Scheme,
 		Host:   proxyHost,
 		Opaque: destHost,
@@ -37,12 +37,13 @@ func main() {
 
 	request := &http.Request{
 		Method: "CONNECT",
-		URL:    &url,
+		URL:    &ur,
 		Header: map[string][]string{},
 		Body:   pipeRead,
 	}
 
-	request.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(u.User.String())))
+	user, _ := url.PathUnescape(u.User.String())
+	request.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(user)))
 
 	response, err := http.DefaultClient.Do(request)
 
