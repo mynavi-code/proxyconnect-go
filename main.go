@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -16,13 +17,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	u, err := url.Parse(os.Getenv("http_proxy"))
-	if err != nil || u.Hostname() == "" || u.Port() == "" {
-		fmt.Fprintf(os.Stderr, "Error: Environment variable \"http_proxy\" is not set\n")
+	proxy_url := os.Getenv("proxyconnect_url")
+	if proxy_url == "" {
+		proxy_url = os.Getenv("http_proxy")
+	}
+	if proxy_url == "" {
+		fmt.Fprintf(os.Stderr, "Error: Environment variable \"proxyconnect_url\" and \"http_proxy\" are not set\n")
+		os.Exit(1)
+	}
+
+	u, err := url.Parse(proxy_url)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Proxy setting can not parse\n")
 		os.Exit(1)
 	}
 
 	proxyHost := u.Hostname() + ":" + u.Port()
+
+	if u.Hostname() == "" || u.Port() == "" {
+		fmt.Fprintf(os.Stderr, "Error: Proxy setting is '%s'\n", proxyHost)
+		os.Exit(1)
+	}
+
 	destHost := os.Args[1] + ":" + os.Args[2]
 
 	fmt.Fprintf(os.Stderr, "ProxyConnect %s -> %s\n", proxyHost, destHost)
@@ -43,7 +59,16 @@ func main() {
 	}
 
 	user, _ := url.PathUnescape(u.User.String())
-	request.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(user)))
+	if user != "" {
+		vs := strings.Split(user, ":")
+		username := vs[0]
+		password := ""
+		if len(vs) >= 2 {
+			password = strings.Repeat("*", len(vs[1]))
+		}
+		fmt.Fprintf(os.Stderr, "Proxy-Authorization: %s %s\n", username, password)
+		request.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(user)))
+	}
 
 	response, err := http.DefaultClient.Do(request)
 
@@ -53,7 +78,7 @@ func main() {
 	}
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		fmt.Fprintf(os.Stderr, "HTTP Error: %s %s\n", response.StatusCode, response.Status)
+		fmt.Fprintf(os.Stderr, "HTTP Error: %s (%d)\n", response.Status, response.StatusCode)
 		os.Exit(1)
 	}
 
