@@ -1,4 +1,4 @@
-SRCS = cmd/proxyconnect-go/main.go
+SRCS = main.go
 NAME = proxyconnect-go
 
 build: build/$(NAME)
